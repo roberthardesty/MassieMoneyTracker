@@ -53,6 +53,12 @@ PRO_MASSIE_COMMITTEES = {
         "description": "New PAC created for this race. Received $1M from Protect Freedom Oct 23, 2025. Paid ~$1M to Maverix Media for pro-Massie ads.",
         "website": "https://www.kentuckyfirstpac.com/",
     },
+    "make_liberty_win": {
+        "name": "Make Liberty Win",
+        "committee_id": "C00731133",
+        "type": "super_pac",
+        "description": "Liberty-aligned Super PAC. Filed $180K in IEs supporting Massie (Jan 2026).",
+    },
 }
 
 # ──────────────────────────────────────────────
@@ -69,13 +75,19 @@ ANTI_MASSIE_COMMITTEES = {
         "name": "MAGA KY",
         "committee_id": "C00908723",
         "type": "super_pac",
-        "description": "Trump-aligned Super PAC. Run by Fabrizio & LaCivita. $1.8M+ spent opposing Massie. Registered Jun 19, 2025.",
+        "description": "Trump-aligned Super PAC. Run by Fabrizio & LaCivita. $4.1M+ spent opposing Massie. Registered Jun 19, 2025.",
     },
     "preserve_america": {
         "name": "Preserve America PAC",
         "committee_id": "C00878801",
         "type": "super_pac",
         "description": "Adelson-funded Super PAC. Donated $750K to MAGA KY. $114M+ total receipts (not all KY-04).",
+    },
+    "rjc_victory_fund": {
+        "name": "RJC Victory Fund",
+        "committee_id": "C00528554",
+        "type": "super_pac",
+        "description": "Republican Jewish Coalition Victory Fund. Filed $2.87M opposing Massie and $2.87M supporting Gallrein (Feb 2026).",
     },
 }
 
@@ -85,9 +97,9 @@ ANTI_MASSIE_COMMITTEES = {
 WATCHLIST_COMMITTEES = {
     "united_democracy_project": {
         "name": "United Democracy Project",
-        "committee_id": "C00798140",  # AIPAC's Super PAC
+        "committee_id": "C00799031",  # AIPAC's Super PAC (IE-only)
         "type": "super_pac",
-        "description": "AIPAC-affiliated Super PAC. Has not yet filed IEs in KY-04 but historically spends big in primaries.",
+        "description": "AIPAC-affiliated Super PAC. Filed a small IE in KY-04 (Oct 2025). Historically spends tens of millions in primaries — watch closely.",
     },
     "america_first_works": {
         "name": "America First Works",

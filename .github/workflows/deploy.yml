@@ -1,0 +1,86 @@
+# .github/workflows/deploy.yml
+# Deploys the MassieMoney static site to GitHub Pages.
+#
+# Two triggers:
+#   1. Push to main — deploys whatever data is already in site/data/
+#   2. Manual dispatch — optionally re-runs the FEC pipeline first to refresh data
+#
+# Requires:
+#   - GitHub Pages enabled (Settings → Pages → Source: GitHub Actions)
+#   - Repository secret FEC_API_KEY (optional but recommended for higher rate limits)
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      refresh_data:
+        description: 'Re-run FEC data pipeline before deploying'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: inputs.refresh_data == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        if: inputs.refresh_data == 'true'
+        run: pip install requests
+
+      - name: Run FEC data pipeline
+        if: inputs.refresh_data == 'true'
+        env:
+          FEC_API_KEY: ${{ secrets.FEC_API_KEY }}
+        run: |
+          cd src
+          python run.py --fresh
+
+      - name: Copy data to site
+        run: |
+          # Remove symlink if present
+          [ -L site/data ] && rm site/data
+          mkdir -p site/data
+          cp output/*.json site/data/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

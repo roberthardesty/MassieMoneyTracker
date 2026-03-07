@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MassieMoney — Follow the Money in KY-04</title>
+    <meta name="description" content="Track campaign finance spending in the Kentucky 4th District Republican Primary: Thomas Massie vs. Ed Gallrein. All data from public FEC filings.">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="MassieMoney — Follow the Money in KY-04">
+    <meta property="og:description" content="Who's funding the fight to unseat Thomas Massie? Interactive campaign finance tracker powered by FEC data.">
+    <meta property="og:type" content="website">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- D3 + d3-sankey for money flow -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.12.3/d3-sankey.min.js"></script>
+
+    <!-- Chart.js for bar/line charts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --green: #16a34a;
+            --green-light: #bbf7d0;
+            --green-bg: #f0fdf4;
+            --red: #dc2626;
+            --red-light: #fecaca;
+            --red-bg: #fef2f2;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --blue: #2563eb;
+            --blue-light: #dbeafe;
+            --gold: #ca8a04;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: var(--gray-900);
+            color: white;
+            padding: 2.5rem 0;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.25rem;
+        }
+        header .subtitle {
+            font-size: 1.1rem;
+            color: var(--gray-400);
+            font-weight: 400;
+        }
+        header .countdown {
+            display: inline-block;
+            margin-top: 1rem;
+            background: var(--red);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        /* ── SUMMARY CARDS ── */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 2px solid var(--gray-200);
+        }
+        .summary-card.pro { border-color: var(--green); background: var(--green-bg); }
+        .summary-card.anti { border-color: var(--red); background: var(--red-bg); }
+        .summary-card .label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+        .summary-card.pro .label { color: var(--green); }
+        .summary-card.anti .label { color: var(--red); }
+        .summary-card .candidate { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .summary-card .big-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .summary-card .detail {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+            margin-top: 0.5rem;
+        }
+        .summary-card .detail span {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        /* ── IE HEADLINE ── */
+        .ie-headline {
+            background: white;
+            border: 2px solid var(--red);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .ie-headline .total {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--red);
+        }
+        .ie-headline .desc {
+            font-size: 1rem;
+            color: var(--gray-600);
+            margin-top: 0.25rem;
+        }
+
+        /* ── SECTIONS ── */
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--gray-200);
+        }
+        .section h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .section .section-desc {
+            font-size: 0.9rem;
+            color: var(--gray-500);
+            margin-bottom: 1rem;
+        }
+
+        /* ── SANKEY ── */
+        #sankey-chart { width: 100%; min-height: 400px; }
+        #sankey-chart svg { width: 100%; }
+
+        /* ── CHARTS ── */
+        .chart-container { position: relative; width: 100%; max-height: 400px; }
+        canvas { max-height: 400px; }
+
+        /* ── IE TABLE ── */
+        .ie-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .ie-table th {
+            text-align: left;
+            padding: 0.5rem;
+            border-bottom: 2px solid var(--gray-200);
+            font-weight: 600;
+            color: var(--gray-500);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .ie-table td {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .ie-table .amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            text-align: right;
+        }
+        .ie-table .oppose { color: var(--red); }
+        .ie-table .support { color: var(--green); }
+        .badge {
+            display: inline-block;
+            padding: 0.1rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .badge.oppose { background: var(--red-light); color: var(--red); }
+        .badge.support { background: var(--green-light); color: var(--green); }
+
+        /* ── TOP DONORS TABLE ── */
+        .donors-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .donors-table th {
+            text-align: left;
+            padding: 0.5rem;
+            border-bottom: 2px solid var(--gray-200);
+            font-weight: 600;
+            color: var(--gray-500);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .donors-table td {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .donors-table .amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--gray-500);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--gray-200);
+        }
+        footer a { color: var(--blue); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 640px) {
+            .summary-grid { grid-template-columns: 1fr; }
+            header h1 { font-size: 1.5rem; }
+            .summary-card .big-number { font-size: 1.5rem; }
+            .ie-headline .total { font-size: 1.8rem; }
+            .section { padding: 1rem; }
+            .ie-table, .donors-table { font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>MassieMoney</h1>
+        <div class="subtitle">Follow the Money in Kentucky's 4th District</div>
+        <div class="countdown" id="countdown">Loading...</div>
+    </div>
+</header>
+
+<main class="container">
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid" id="summary-cards">
+        <div class="summary-card pro">
+            <div class="label">Pro-Massie</div>
+            <div class="candidate">Rep. Thomas Massie (Incumbent)</div>
+            <div class="big-number" id="pro-total">—</div>
+            <div class="detail">Total raised across all committees</div>
+            <div class="detail">Cash on hand: <span id="pro-coh">—</span></div>
+        </div>
+        <div class="summary-card anti">
+            <div class="label">Anti-Massie / Pro-Gallrein</div>
+            <div class="candidate">Ed Gallrein (Challenger, Trump-endorsed)</div>
+            <div class="big-number" id="anti-total">—</div>
+            <div class="detail">Total raised across all committees</div>
+            <div class="detail">Cash on hand: <span id="anti-coh">—</span></div>
+        </div>
+    </div>
+
+    <!-- IE HEADLINE -->
+    <div class="ie-headline">
+        <div class="total" id="ie-oppose-total">—</div>
+        <div class="desc">spent by outside groups <strong>opposing</strong> Thomas Massie</div>
+    </div>
+
+    <!-- SANKEY DIAGRAM -->
+    <div class="section">
+        <h2>Follow the Money</h2>
+        <div class="section-desc">How dollars flow from mega-donors through PACs into campaign spending. Green = pro-Massie, red = anti-Massie.</div>
+        <div id="sankey-chart"></div>
+    </div>
+
+    <!-- IE TIMELINE -->
+    <div class="section">
+        <h2>Outside Spending Over Time</h2>
+        <div class="section-desc">Cumulative independent expenditures for and against each candidate since June 2025.</div>
+        <div class="chart-container">
+            <canvas id="ie-timeline-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- DONOR GEOGRAPHY -->
+    <div class="section">
+        <h2>Where the Money Comes From</h2>
+        <div class="section-desc">In-state (Kentucky) vs. out-of-state donations for each campaign committee.</div>
+        <div class="chart-container">
+            <canvas id="geo-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- DONOR SIZE -->
+    <div class="section">
+        <h2>Small Dollar vs. Big Dollar</h2>
+        <div class="section-desc">Donation size distribution. Size 0 = unitemized (under $200). Massie's grassroots base vs. PAC mega-checks.</div>
+        <div class="chart-container">
+            <canvas id="size-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- IE BY COMMITTEE TABLE -->
+    <div class="section">
+        <h2>Outside Spending by Committee</h2>
+        <div class="section-desc">Every PAC that has filed independent expenditures in this race.</div>
+        <table class="ie-table" id="ie-table">
+            <thead>
+                <tr>
+                    <th>Committee</th>
+                    <th>Type</th>
+                    <th>Target</th>
+                    <th>Filings</th>
+                    <th style="text-align:right">Total</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- TOP DONORS TABLE -->
+    <div class="section">
+        <h2>Top Individual Donors — Massie Campaign</h2>
+        <div class="section-desc">Largest itemized individual donors to Thomas Massie for Congress (donations over $200).</div>
+        <table class="donors-table" id="top-donors-table">
+            <thead>
+                <tr>
+                    <th>Donor</th>
+                    <th>Employer</th>
+                    <th>State</th>
+                    <th>#</th>
+                    <th style="text-align:right">Total</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</main>
+
+<footer>
+    <div class="container">
+        <p>All data from public <a href="https://www.fec.gov/data/elections/house/KY/04/2026/" target="_blank">FEC filings</a>.
+           Last updated: <span id="last-updated">—</span>.</p>
+        <p style="margin-top:0.5rem">
+            <a href="https://github.com/robhardesty/MassieMoney" target="_blank">GitHub</a> ·
+            Built as a public interest transparency project.
+        </p>
+    </div>
+</footer>
+
+<script>
+// ── DATA LOADING ──
+const DATA_BASE = './data/';
+
+async function loadJSON(file) {
+    const resp = await fetch(DATA_BASE + file);
+    return resp.json();
+}
+
+function fmt(n) {
+    if (n == null || isNaN(n)) return '—';
+    return '$' + Math.round(n).toLocaleString();
+}
+
+function fmtShort(n) {
+    if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000) return '$' + (n / 1_000).toFixed(0) + 'K';
+    return '$' + Math.round(n).toLocaleString();
+}
+
+// ── SUMMARY CARDS ──
+async function renderSummary() {
+    const data = await loadJSON('summary.json');
+    document.getElementById('countdown').textContent = data.days_until_primary + ' days until primary (May 19)';
+    document.getElementById('pro-total').textContent = fmt(data.pro_massie?.total_receipts);
+    document.getElementById('pro-coh').textContent = fmt(data.pro_massie?.cash_on_hand);
+    document.getElementById('anti-total').textContent = fmt(data.anti_massie?.total_receipts);
+    document.getElementById('anti-coh').textContent = fmt(data.anti_massie?.cash_on_hand);
+
+    // Calculate total oppose-Massie IE spending from ie_detail
+    const opposeTotal =
+        (data.ie_detail?.anti_massie?.ie_oppose || 0) +
+        (data.ie_detail?.unknown?.ie_oppose || 0);
+    document.getElementById('ie-oppose-total').textContent = fmt(opposeTotal);
+}
+
+// ── SANKEY DIAGRAM ──
+async function renderSankey() {
+    const data = await loadJSON('sankey.json');
+    const container = document.getElementById('sankey-chart');
+    const width = container.clientWidth;
+    const height = 420;
+    const margin = { top: 10, right: 160, bottom: 10, left: 10 };
+
+    const svg = d3.select('#sankey-chart')
+        .append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`)
+        .attr('preserveAspectRatio', 'xMidYMid meet');
+
+    // Filter out zero/missing links
+    const validLinks = data.links.filter(l => l.value > 0);
+    if (validLinks.length === 0) {
+        svg.append('text').attr('x', width/2).attr('y', height/2)
+           .attr('text-anchor', 'middle').attr('fill', '#999')
+           .text('Sankey data loading...');
+        return;
+    }
+
+    const sankey = d3.sankey()
+        .nodeId(d => d.index)
+        .nodeWidth(18)
+        .nodePadding(14)
+        .nodeAlign(d3.sankeyLeft)
+        .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]]);
+
+    const graph = sankey({
+        nodes: data.nodes.map((d, i) => ({ ...d, index: i })),
+        links: validLinks.map(d => ({ ...d }))
+    });
+
+    const colorMap = {
+        'donor_pro_massie': '#16a34a',
+        'donor_anti_massie': '#dc2626',
+        'pro_massie': '#16a34a',
+        'anti_massie': '#dc2626',
+        'target_support': '#16a34a',
+        'target_oppose': '#dc2626',
+        'target_support_gallrein': '#dc2626',
+    };
+
+    // Links
+    svg.append('g')
+        .selectAll('path')
+        .data(graph.links)
+        .join('path')
+        .attr('d', d3.sankeyLinkHorizontal())
+        .attr('stroke', d => {
+            const srcCat = graph.nodes[d.source.index]?.category || '';
+            return srcCat.includes('anti') || srcCat.includes('oppose') ? '#dc262680' : '#16a34a80';
+        })
+        .attr('stroke-width', d => Math.max(2, d.width))
+        .attr('fill', 'none')
+        .append('title')
+        .text(d => `${d.source.name} → ${d.target.name}: ${fmt(d.value)}`);
+
+    // Nodes
+    svg.append('g')
+        .selectAll('rect')
+        .data(graph.nodes)
+        .join('rect')
+        .attr('x', d => d.x0)
+        .attr('y', d => d.y0)
+        .attr('height', d => Math.max(1, d.y1 - d.y0))
+        .attr('width', d => d.x1 - d.x0)
+        .attr('fill', d => colorMap[d.category] || '#6b7280')
+        .attr('rx', 3)
+        .append('title')
+        .text(d => `${d.name}: ${fmt(d.value)}`);
+
+    // Labels
+    svg.append('g')
+        .selectAll('text')
+        .data(graph.nodes)
+        .join('text')
+        .attr('x', d => d.x1 + 6)
+        .attr('y', d => (d.y0 + d.y1) / 2)
+        .attr('dy', '0.35em')
+        .attr('font-size', '11px')
+        .attr('font-family', 'Inter, sans-serif')
+        .attr('fill', '#374151')
+        .text(d => {
+            // Shorten long PAC names
+            let name = d.name.replace('POLITICAL ACTION COMMITTEE', 'PAC')
+                             .replace('FOR CONGRESS', '');
+            if (name.length > 28) name = name.slice(0, 26) + '…';
+            return `${name} ${fmtShort(d.value)}`;
+        });
+}
+
+// ── IE TIMELINE CHART ──
+async function renderIETimeline() {
+    const data = await loadJSON('ie_timeline.json');
+    if (!data.length) return;
+
+    // Group by date and build running totals
+    const dates = [];
+    const oppose = [];
+    const support = [];
+    let lastDate = null;
+    for (const entry of data) {
+        if (entry.date !== lastDate) {
+            dates.push(entry.date);
+            oppose.push(entry.running_total_oppose);
+            support.push(entry.running_total_support);
+            lastDate = entry.date;
+        } else {
+            oppose[oppose.length - 1] = entry.running_total_oppose;
+            support[support.length - 1] = entry.running_total_support;
+        }
+    }
+
+    new Chart(document.getElementById('ie-timeline-chart'), {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Oppose Massie (cumulative)',
+                    data: oppose,
+                    borderColor: '#dc2626',
+                    backgroundColor: '#dc262620',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    borderWidth: 2.5,
+                },
+                {
+                    label: 'Support Massie (cumulative)',
+                    data: support,
+                    borderColor: '#16a34a',
+                    backgroundColor: '#16a34a20',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    borderWidth: 2.5,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'category',
+                    ticks: { maxTicksLimit: 8, font: { size: 11 } }
+                },
+                y: {
+                    ticks: {
+                        callback: v => fmtShort(v),
+                        font: { size: 11 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ── DONOR GEOGRAPHY CHART ──
+async function renderGeoChart() {
+    const data = await loadJSON('donors_by_state.json');
+
+    const committees = {
+        'C00509729': 'Massie Campaign',
+        'C00923995': 'Gallrein Campaign',
+        'C00908723': 'MAGA KY',
+    };
+
+    const labels = [];
+    const inState = [];
+    const outState = [];
+
+    for (const [cid, name] of Object.entries(committees)) {
+        const d = data[cid];
+        if (!d) continue;
+        labels.push(name);
+        inState.push(d.total_in_state || 0);
+        outState.push(d.total_out_of_state || 0);
+    }
+
+    new Chart(document.getElementById('geo-chart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'In-State (KY)',
+                    data: inState,
+                    backgroundColor: '#16a34a',
+                    borderRadius: 4,
+                },
+                {
+                    label: 'Out-of-State',
+                    data: outState,
+                    backgroundColor: '#6b7280',
+                    borderRadius: 4,
+                },
+            ],
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}` } }
+            },
+            scales: {
+                x: { ticks: { callback: v => fmtShort(v) }, stacked: true },
+                y: { stacked: true },
+            }
+        }
+    });
+}
+
+// ── DONOR SIZE CHART ──
+async function renderSizeChart() {
+    const data = await loadJSON('donors_by_size.json');
+
+    const sizeLabels = { 0: 'Under $200', 200: '$200–$499', 500: '$500–$999', 1000: '$1,000–$1,999', 2000: '$2,000+' };
+    const committees = {
+        'C00509729': { name: 'Massie Campaign', color: '#16a34a' },
+        'C00908723': { name: 'MAGA KY', color: '#dc2626' },
+    };
+
+    const sizes = [0, 200, 500, 1000, 2000];
+    const datasets = [];
+
+    for (const [cid, meta] of Object.entries(committees)) {
+        const rows = data[cid] || [];
+        const totals = {};
+        for (const r of rows) totals[r.size] = r.total;
+        datasets.push({
+            label: meta.name,
+            data: sizes.map(s => totals[s] || 0),
+            backgroundColor: meta.color,
+            borderRadius: 4,
+        });
+    }
+
+    new Chart(document.getElementById('size-chart'), {
+        type: 'bar',
+        data: {
+            labels: sizes.map(s => sizeLabels[s]),
+            datasets,
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}` } }
+            },
+            scales: {
+                y: { ticks: { callback: v => fmtShort(v) } }
+            }
+        }
+    });
+}
+
+// ── IE TABLE ──
+async function renderIETable() {
+    const data = await loadJSON('ie_by_committee.json');
+    const tbody = document.querySelector('#ie-table tbody');
+
+    // Sort by absolute total descending
+    data.sort((a, b) => Math.abs(b.total_amount) - Math.abs(a.total_amount));
+
+    for (const row of data) {
+        if (Math.abs(row.total_amount) < 100) continue; // skip noise
+        const isOppose = row.support_oppose_indicator === 'O';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${row.committee_name}</td>
+            <td><span class="badge ${isOppose ? 'oppose' : 'support'}">${isOppose ? 'OPPOSE' : 'SUPPORT'}</span></td>
+            <td>${(row.candidate_name || '').replace(/,.*/, '')}</td>
+            <td>${row.num_filings}</td>
+            <td class="amount ${isOppose ? 'oppose' : 'support'}">${fmt(Math.abs(row.total_amount))}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+// ── TOP DONORS TABLE ──
+async function renderTopDonors() {
+    const data = await loadJSON('top_donors.json');
+    const tbody = document.querySelector('#top-donors-table tbody');
+    const massieDonors = data['C00509729'] || [];
+
+    for (const d of massieDonors.slice(0, 20)) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${d.contributor_name}</td>
+            <td>${d.contributor_employer || '—'}</td>
+            <td>${d.contributor_state || '—'}</td>
+            <td>${d.num_contributions}</td>
+            <td class="amount">${fmt(d.total_contributed)}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+// ── META ──
+async function renderMeta() {
+    const meta = await loadJSON('meta.json');
+    const d = new Date(meta.exported_at);
+    document.getElementById('last-updated').textContent = d.toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    });
+}
+
+// ── INIT ──
+Promise.all([
+    renderSummary(),
+    renderSankey(),
+    renderIETimeline(),
+    renderGeoChart(),
+    renderSizeChart(),
+    renderIETable(),
+    renderTopDonors(),
+    renderMeta(),
+]).catch(err => console.error('MassieMoney load error:', err));
+</script>
+
+</body>
+</html>

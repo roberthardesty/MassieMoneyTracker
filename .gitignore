@@ -1,5 +1,5 @@
 # Database (lives at ~/.massiemoney/data/ locally, not in repo)
-data/
+/data/
 *.db
 *.db-journal
 *.db-wal
@@ -21,10 +21,8 @@ build/
 venv/
 env/
 
-# Output JSON (regenerated from DB, not checked in)
-# Uncomment the line below if you want to keep output out of git.
-# For now we check it in so the frontend can reference it.
-# output/
+# Output JSON — checked into output/ and copied to site/data/ for deployment
+# output/ is the source of truth; site/data/ is the deploy-ready copy
 
 # OS files
 .DS_Store

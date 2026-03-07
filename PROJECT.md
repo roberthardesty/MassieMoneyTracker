@@ -38,6 +38,7 @@ The core narrative: DC billionaires and MAGA-aligned super PACs are spending unp
 | **Thomas Massie for Congress** | `C00509729` | Principal Campaign Committee | Active quarterly House committee. Registered Jan 18, 2012. |
 | **Protect Freedom PAC** | `C00657866` | Super PAC (IE-Only) | Active monthly. Registered Oct 11, 2017. Run by former Rand Paul staffers. ~$30M+ lifetime from Jeff Yass (~80% of all receipts). Donated $1M to Kentucky First PAC for pro-Massie ads. |
 | **Kentucky First PAC** | `C00918227` | Super PAC (IE-Only) | New PAC created specifically for this race. Received $1M from Protect Freedom on Oct 23, 2025. Paid $1,006,986 to Maverix Media for pro-Massie media buy. |
+| **Make Liberty Win** | `C00731133` | Super PAC (IE-Only) | Liberty-aligned PAC supporting Massie. ~$180K in supporting IEs. |
 
 **Key pro-Massie donors to profile:**
 - **Jeff Yass** — Susquehanna International Group co-founder, billionaire, libertarian mega-donor. Funds Protect Freedom. Yass's giving totals ~$35M to Protect Freedom over its lifetime.
@@ -49,7 +50,8 @@ The core narrative: DC billionaires and MAGA-aligned super PACs are spending unp
 |---|---|---|---|
 | **MAGA KY** | `C00908723` | Super PAC (IE-Only) | Active quarterly. Registered Jun 19, 2025. Run by Tony Fabrizio & Chris LaCivita (Trump's senior political advisers). $1.8M+ spent opposing Massie as of late 2025. LaCivita said they'll spend "whatever it takes." |
 | **Ed Gallrein Campaign Committee** | `C00923995` (Candidate: `H6KY04171`) | Principal Campaign Committee | Gallrein raised $1.2M in Q4 2025 (nearly 2x Massie's $640K). |
-| **Preserve America PAC** | TBD — needs FEC lookup | Super PAC | Primarily funded by Miriam Adelson. Donated $750K to MAGA KY. |
+| **RJC Victory Fund** | `C00528554` | Super PAC | ~$2.87M in IEs opposing Massie. Republican Jewish Coalition-affiliated. |
+| **Preserve America PAC** | `C00878801` | Super PAC | Primarily funded by Miriam Adelson. Donated $750K to MAGA KY. |
 | **America First Works** | N/A (501c4) | Dark money org | Endorsed Gallrein Mar 3, 2026. Began door-knocking operation. Not required to disclose donors to FEC. |
 | **U.S. Chamber of Commerce PAC** | TBD | PAC | Backed Gallrein per Bloomberg Government reporting. |
 
@@ -150,7 +152,7 @@ The core narrative: DC billionaires and MAGA-aligned super PACs are spending unp
 - **Data modeling:** Normalize committees, donors, transactions into relational tables
 
 **Visualization / Frontend:**
-- **Option A (fast MVP):** Single-page HTML/JS app with D3.js or Chart.js. Host on GitHub Pages or Vercel. Zero backend needed if data is pre-baked into JSON.
+- **Option A (fast MVP):** Single-page HTML/JS app with D3.js or Chart.js. Interactivity with AlpineJS. Host on GitHub Pages or Vercel. Zero backend needed if data is pre-baked into JSON.
 - **Option B (richer):** React + Recharts or Plotly.js. Still static hosting, but more interactive.
 - **Option C (maximum impact):** Observable notebook — easy to share, embed, and iterate. Good for the data journalism angle.
 
@@ -273,33 +275,42 @@ A custom Claude skill could be built (using `skill-creator`) that:
 
 ## 7. Phased Roadmap
 
-### Phase 1: Data Foundation (Week 1)
-- [ ] Register for FEC API key
-- [ ] Write Python FEC API client (committees, Schedule A, Schedule E)
-- [ ] Pull initial data for all known committee IDs
-- [ ] Look up remaining TBD committee IDs (Gallrein, Kentucky First PAC, Preserve America)
-- [ ] Design database schema
-- [ ] Load and normalize data
-- [ ] Validate against known figures from journalism ($1.8M MAGA KY, $1M Protect Freedom → Kentucky First, etc.)
+### Phase 1: Data Foundation (Week 1) ✅ COMPLETE — Mar 7, 2026
+- [x] Register for FEC API key
+- [x] Write Python FEC API client with retry/backoff (committees, Schedule A/B/E)
+- [x] Look up all committee IDs (Massie C00509729, Gallrein C00923995, MAGA KY C00908723, Protect Freedom C00657866, Kentucky First C00918227)
+- [x] Design SQLite database schema (7 tables, 3 views, indexed)
+- [x] Build ETL pipeline with checkpoint/resume support (13 granular steps)
+- [x] Pull and load all data — committees, IEs, receipts, disbursements, aggregates
+- [x] Validate against journalism figures ✓
+- [x] Export 9 static JSON files for frontend consumption
+- [x] Push to GitHub
 
-### Phase 2: MVP Visualization (Week 2)
-- [ ] Build static HTML/JS site scaffold
-- [ ] Implement Sankey diagram (donors → PACs → spending)
-- [ ] Implement in-state vs out-of-state map
-- [ ] Implement running totals chart
-- [ ] Implement donor size distribution
-- [ ] Generate static JSON from database
-- [ ] Deploy to GitHub Pages
-- [ ] Mobile responsiveness pass
+### Phase 2: MVP Visualization (Week 2) ✅ COMPLETE — Mar 7, 2026
+- [x] Build static HTML/JS/CSS site scaffold (single index.html with Inter + JetBrains Mono fonts)
+- [x] Summary hero section: total spending by side, days to primary countdown
+- [x] Sankey diagram: donors → PACs → spending for/against (D3.js d3-sankey, committee_id-based matching)
+- [x] IE timeline chart: cumulative spending over time (Chart.js)
+- [x] Donor geography: in-state (KY) vs out-of-state breakdown (Chart.js horizontal bar)
+- [x] Donor size distribution: small-dollar vs mega-donor comparison (Chart.js)
+- [x] IE by committee table
+- [x] Top donors table
+- [x] Mobile responsiveness (breakpoints at 640px)
+- [x] Deploy script (deploy.sh) and GitHub Actions workflow (deploy.yml)
+- [x] GitHub Pages deployment via Actions (push to main auto-deploys)
+- [x] Nightly data refresh workflow (refresh-data.yml, runs 2 AM ET)
+- [x] Added missing committees: RJC Victory Fund (C00528554), Make Liberty Win (C00731133)
+- [x] Fixed UDP committee ID (C00799031)
+- [x] Fixed Sankey name-matching bug (now uses committee_id-based lookups)
 
-### Phase 3: Polish & Share (Week 3)
-- [ ] Mega-donor profile cards
-- [ ] IE filing timeline
-- [ ] Social sharing metadata (Open Graph tags, Twitter cards)
-- [ ] Write shareable "about" page explaining the project and methodology
-- [ ] Set up GitHub Actions for daily data refresh
+### Phase 3: Polish & Share (Week 3) ← CURRENT
+- [ ] Mega-donor profile cards (Singer, Paulson, Adelson, Yass)
+- [ ] "About this project" methodology section
+- [x] Social sharing metadata (Open Graph tags added in index.html)
+- [x] Set up GitHub Actions for nightly data refresh + auto-deploy
+- [ ] Alert system for new IEs > $100K (Discord/Slack webhook or X post)
 - [ ] Contact Massie campaign and/or Protect Freedom with the finished tool
-- [ ] Share with liberty-aligned media (Reason, The Intercept, etc.)
+- [ ] Share with liberty-aligned media and grassroots networks
 
 ### Phase 4: GOTV Integration (Weeks 4+, stretch goal)
 - [ ] Pull Kentucky SBE voter registration data
@@ -344,10 +355,10 @@ A custom Claude skill could be built (using `skill-creator`) that:
 
 ## 10. Open Questions
 
-1. **Gallrein's FEC committee ID** — not yet found via search. Need to look up directly on FEC.gov elections page for KY-04 2026.
-2. **Kentucky First PAC FEC ID** — new PAC, may be registered under a slightly different name. Need FEC lookup.
-3. **Preserve America PAC FEC ID** — Adelson-linked PAC. Need FEC lookup.
-4. **AIPAC / United Democracy Project involvement** — have they filed any IEs in this race yet? Monitor Schedule E filings.
-5. **Domain name** — secure a domain early for shareability.
-6. **Hosting** — GitHub Pages (free, simple) vs Vercel (free tier, more features) vs custom.
-7. **Campaign contact** — should we reach out to Massie's campaign before or after the MVP ships?
+1. ~~**Gallrein's FEC committee ID**~~ — RESOLVED: `C00923995` (candidate `H6KY04171`)
+2. ~~**Kentucky First PAC FEC ID**~~ — RESOLVED: `C00918227`
+3. **Preserve America PAC FEC ID** — Using `C00878801`. Confirm this is the correct Adelson-linked entity.
+4. **AIPAC / United Democracy Project involvement** — UDP committee ID corrected to `C00799031`. Monitor for IEs in this race.
+5. **Domain name** — secure a domain early for shareability. Options: massiemoney.com, followthemoneyky.com, ky4money.org.
+6. ~~**Hosting**~~ — RESOLVED: GitHub Pages via GitHub Actions. Auto-deploys on push to main. Nightly data refresh at 2 AM ET.
+7. **Campaign contact** — reach out now that MVP is live with a working link.

@@ -253,11 +253,15 @@ def export_sankey(conn, output_dir: Path):
     Generate Sankey diagram data showing money flow:
     Donors → PACs/Committees → Spending (support/oppose)
 
+    Uses committee_id-based lookups to avoid name-matching issues
+    (FEC stores names in ALL CAPS).
+
     Format: { nodes: [...], links: [...] }
     """
     nodes = []
     links = []
     node_index = {}
+    cid_to_node = {}  # committee_id → node index
 
     def add_node(name, category):
         if name not in node_index:
@@ -269,65 +273,90 @@ def export_sankey(conn, output_dir: Path):
     for key, donor in KEY_DONORS.items():
         add_node(donor["name"], f"donor_{donor['side']}")
 
-    # Add committees as middle nodes
+    # Add committees as middle nodes (use display-friendly names)
     committees = conn.execute("""
-        SELECT committee_id, name, side, total_receipts, total_disbursements
+        SELECT committee_id, name, side, local_key, total_receipts, total_disbursements
         FROM committees
         WHERE side IN ('pro_massie', 'anti_massie')
     """).fetchall()
 
+    # Build display names — title-case the FEC all-caps names
     for c in committees:
-        add_node(c["name"], c["side"])
+        display_name = c["name"].title().replace("Pac", "PAC").replace("Ky", "KY") \
+                                       .replace("For Congress", "Campaign") \
+                                       .replace("Rjc", "RJC").replace("Udp", "UDP") \
+                                       .replace("'S", "'s")
+        idx = add_node(display_name, c["side"])
+        cid_to_node[c["committee_id"]] = idx
 
-    # Add target nodes (support/oppose Massie, support/oppose Gallrein)
+    # Add target nodes
     add_node("Support Massie", "target_support")
     add_node("Oppose Massie", "target_oppose")
     add_node("Support Gallrein", "target_support_gallrein")
 
-    # Links: Key donors → committees (from known contributions in config)
+    # ── Links: Key donors → committees (known from journalism/FEC filings) ──
+    # These use committee_id for reliable matching
     known_flows = [
-        ("Jeffrey Yass", "Protect Freedom Political Action Committee", 7500000),
-        ("Protect Freedom Political Action Committee", "Kentucky First PAC", 1000000),
-        ("Paul Singer", "MAGA KY", 1000000),
-        ("John Paulson", "MAGA KY", 250000),
-        ("Miriam Adelson", "MAGA KY", 750000),  # via Preserve America
+        # (source_name, target_committee_id, amount)
+        ("Jeffrey Yass", "C00657866", 7500000),         # Yass → Protect Freedom
+        ("Paul Singer", "C00908723", 1000000),           # Singer → MAGA KY
+        ("John Paulson", "C00908723", 250000),           # Paulson → MAGA KY
+        ("Miriam Adelson", "C00908723", 750000),         # Adelson → MAGA KY (via Preserve America)
+    ]
+    # PAC-to-PAC flows
+    known_pac_flows = [
+        # (source_committee_id, target_committee_id, amount)
+        ("C00657866", "C00918227", 1000000),  # Protect Freedom → Kentucky First PAC
     ]
 
-    for source, target, amount in known_flows:
-        if source in node_index and target in node_index:
+    for source_name, target_cid, amount in known_flows:
+        if source_name in node_index and target_cid in cid_to_node:
             links.append({
-                "source": node_index[source],
-                "target": node_index[target],
+                "source": node_index[source_name],
+                "target": cid_to_node[target_cid],
                 "value": amount,
             })
 
-    # Links: Committees → targets (from IE data)
+    for source_cid, target_cid, amount in known_pac_flows:
+        if source_cid in cid_to_node and target_cid in cid_to_node:
+            links.append({
+                "source": cid_to_node[source_cid],
+                "target": cid_to_node[target_cid],
+                "value": amount,
+            })
+
+    # ── Links: Committees → targets (from IE filings in DB) ──
     ie_flows = conn.execute("""
         SELECT
+            committee_id,
             committee_name,
             candidate_name,
             support_oppose_indicator,
             SUM(expenditure_amount) as total
         FROM independent_expenditures
-        GROUP BY committee_name, candidate_name, support_oppose_indicator
+        WHERE expenditure_amount > 0
+        GROUP BY committee_id, candidate_name, support_oppose_indicator
     """).fetchall()
 
     for ie in ie_flows:
-        source_name = ie["committee_name"]
-        if source_name not in node_index:
+        source_idx = cid_to_node.get(ie["committee_id"])
+        if source_idx is None:
             continue
 
-        if ie["support_oppose_indicator"] == "O" and "MASSIE" in (ie["candidate_name"] or "").upper():
+        candidate = (ie["candidate_name"] or "").upper()
+        so = ie["support_oppose_indicator"]
+
+        if so == "O" and "MASSIE" in candidate:
             target_name = "Oppose Massie"
-        elif ie["support_oppose_indicator"] == "S" and "MASSIE" in (ie["candidate_name"] or "").upper():
+        elif so == "S" and "MASSIE" in candidate:
             target_name = "Support Massie"
-        elif ie["support_oppose_indicator"] == "S" and "GALLREIN" in (ie["candidate_name"] or "").upper():
+        elif so == "S" and "GALLREIN" in candidate:
             target_name = "Support Gallrein"
         else:
             continue
 
         links.append({
-            "source": node_index[source_name],
+            "source": source_idx,
             "target": node_index[target_name],
             "value": ie["total"],
         })

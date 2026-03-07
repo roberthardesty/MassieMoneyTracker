@@ -45,11 +45,14 @@ PIPELINE_STEPS = [
     ("ie_gallrein",       "Independent Expenditures targeting Gallrein"),
     ("ie_pac_maga_ky",    "Independent Expenditures from MAGA KY"),
     ("ie_pac_ky_first",   "Independent Expenditures from Kentucky First PAC"),
+    ("ie_pac_rjc",        "Independent Expenditures from RJC Victory Fund"),
+    ("ie_pac_mlw",        "Independent Expenditures from Make Liberty Win"),
     ("agg_by_size",       "Receipts Aggregates by Size"),
     ("agg_by_state",      "Receipts Aggregates by State"),
     ("receipts_massie",   "Itemized Receipts — Massie Campaign"),
     ("receipts_gallrein", "Itemized Receipts — Gallrein Campaign"),
     ("receipts_maga_ky",  "Itemized Receipts — MAGA KY"),
+    ("receipts_rjc",      "Itemized Receipts — RJC Victory Fund"),
     ("disb_massie",       "Disbursements — Massie Campaign"),
     ("disb_gallrein",     "Disbursements — Gallrein Campaign"),
     ("disb_maga_ky",      "Disbursements — MAGA KY"),
@@ -407,6 +410,8 @@ def run_full_ingest(fresh: bool = False):
     gallrein_cid = "C00923995"
     maga_ky_cid = "C00908723"
     ky_first_cid = "C00918227"
+    rjc_cid = "C00528554"
+    mlw_cid = "C00731133"
     massie_candidate = CANDIDATES["massie"]["candidate_id"]
     gallrein_candidate = CANDIDATES["gallrein"]["candidate_id"]
 
@@ -428,6 +433,14 @@ def run_full_ingest(fresh: bool = False):
             client, conn, committee_id=ky_first_cid,
             label=f"from Kentucky First PAC ({ky_first_cid})"
         ),
+        "ie_pac_rjc": lambda: _ingest_ie_for_target(
+            client, conn, committee_id=rjc_cid,
+            label=f"from RJC Victory Fund ({rjc_cid})"
+        ),
+        "ie_pac_mlw": lambda: _ingest_ie_for_target(
+            client, conn, committee_id=mlw_cid,
+            label=f"from Make Liberty Win ({mlw_cid})"
+        ),
         "agg_by_size": lambda: ingest_receipts_aggregates(client, conn),
         "agg_by_state": lambda: None,  # handled together with agg_by_size
         "receipts_massie": lambda: ingest_receipts_for_committee(
@@ -438,6 +451,9 @@ def run_full_ingest(fresh: bool = False):
         ),
         "receipts_maga_ky": lambda: ingest_receipts_for_committee(
             client, conn, maga_ky_cid, "MAGA KY"
+        ),
+        "receipts_rjc": lambda: ingest_receipts_for_committee(
+            client, conn, rjc_cid, "RJC Victory Fund"
         ),
         "disb_massie": lambda: ingest_disbursements_for_committee(
             client, conn, massie_cid, "Thomas Massie for Congress"
@@ -553,6 +569,12 @@ def main():
                                   label=f"targeting Gallrein ({gallrein_id})")
             _ingest_ie_for_target(client, conn, committee_id="C00908723",
                                   label="from MAGA KY")
+            _ingest_ie_for_target(client, conn, committee_id="C00918227",
+                                  label="from Kentucky First PAC")
+            _ingest_ie_for_target(client, conn, committee_id="C00528554",
+                                  label="from RJC Victory Fund")
+            _ingest_ie_for_target(client, conn, committee_id="C00731133",
+                                  label="from Make Liberty Win")
         finally:
             conn.close()
         return
@@ -563,6 +585,7 @@ def main():
             ingest_receipts_for_committee(client, conn, "C00509729", "Massie")
             ingest_receipts_for_committee(client, conn, "C00923995", "Gallrein")
             ingest_receipts_for_committee(client, conn, "C00908723", "MAGA KY")
+            ingest_receipts_for_committee(client, conn, "C00528554", "RJC Victory Fund")
             ingest_receipts_aggregates(client, conn)
         finally:
             conn.close()
