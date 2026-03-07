@@ -1,0 +1,112 @@
+{
+  "C00509729": [
+    {
+      "committee_id": "C00509729",
+      "cycle": 2026,
+      "size": 0,
+      "total": 899637.02,
+      "count": null
+    },
+    {
+      "committee_id": "C00509729",
+      "cycle": 2026,
+      "size": 200,
+      "total": 146043.8,
+      "count": 582
+    },
+    {
+      "committee_id": "C00509729",
+      "cycle": 2026,
+      "size": 500,
+      "total": 158595.17,
+      "count": 312
+    },
+    {
+      "committee_id": "C00509729",
+      "cycle": 2026,
+      "size": 1000,
+      "total": 197045.22,
+      "count": 206
+    },
+    {
+      "committee_id": "C00509729",
+      "cycle": 2026,
+      "size": 2000,
+      "total": 573878.91,
+      "count": 219
+    }
+  ],
+  "C00657866": [
+    {
+      "committee_id": "C00657866",
+      "cycle": 2026,
+      "size": 0,
+      "total": 1125.0,
+      "count": null
+    },
+    {
+      "committee_id": "C00657866",
+      "cycle": 2026,
+      "size": 1000,
+      "total": 3000.0,
+      "count": 3
+    },
+    {
+      "committee_id": "C00657866",
+      "cycle": 2026,
+      "size": 2000,
+      "total": 7731500.0,
+      "count": 17
+    }
+  ],
+  "C00878801": [
+    {
+      "committee_id": "C00878801",
+      "cycle": 2026,
+      "size": 0,
+      "total": 210.0,
+      "count": null
+    }
+  ],
+  "C00908723": [
+    {
+      "committee_id": "C00908723",
+      "cycle": 2026,
+      "size": 0,
+      "total": 0.0,
+      "count": null
+    },
+    {
+      "committee_id": "C00908723",
+      "cycle": 2026,
+      "size": 2000,
+      "total": 2750000.0,
+      "count": 4
+    }
+  ],
+  "C00918227": [
+    {
+      "committee_id": "C00918227",
+      "cycle": 2026,
+      "size": 0,
+      "total": 50.0,
+      "count": null
+    },
+    {
+      "committee_id": "C00918227",
+      "cycle": 2026,
+      "size": 2000,
+      "total": 1110000.0,
+      "count": 3
+    }
+  ],
+  "C00923995": [
+    {
+      "committee_id": "C00923995",
+      "cycle": 2026,
+      "size": 0,
+      "total": 12477.09,
+      "count": null
+    }
+  ]
+}

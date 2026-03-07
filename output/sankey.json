@@ -1,0 +1,88 @@
+{
+  "nodes": [
+    {
+      "name": "Jeffrey Yass",
+      "category": "donor_pro_massie"
+    },
+    {
+      "name": "Paul Singer",
+      "category": "donor_anti_massie"
+    },
+    {
+      "name": "John Paulson",
+      "category": "donor_anti_massie"
+    },
+    {
+      "name": "Miriam Adelson",
+      "category": "donor_anti_massie"
+    },
+    {
+      "name": "THOMAS MASSIE FOR CONGRESS",
+      "category": "pro_massie"
+    },
+    {
+      "name": "PROTECT FREEDOM POLITICAL ACTION COMMITTEE",
+      "category": "pro_massie"
+    },
+    {
+      "name": "KENTUCKY FIRST PAC",
+      "category": "pro_massie"
+    },
+    {
+      "name": "GALLREIN FOR CONGRESS",
+      "category": "anti_massie"
+    },
+    {
+      "name": "MAGA KY",
+      "category": "anti_massie"
+    },
+    {
+      "name": "PRESERVE AMERICA PAC",
+      "category": "anti_massie"
+    },
+    {
+      "name": "Support Massie",
+      "category": "target_support"
+    },
+    {
+      "name": "Oppose Massie",
+      "category": "target_oppose"
+    },
+    {
+      "name": "Support Gallrein",
+      "category": "target_support_gallrein"
+    }
+  ],
+  "links": [
+    {
+      "source": 1,
+      "target": 8,
+      "value": 1000000
+    },
+    {
+      "source": 2,
+      "target": 8,
+      "value": 250000
+    },
+    {
+      "source": 3,
+      "target": 8,
+      "value": 750000
+    },
+    {
+      "source": 6,
+      "target": 10,
+      "value": 2013972.0
+    },
+    {
+      "source": 8,
+      "target": 12,
+      "value": 468911.0
+    },
+    {
+      "source": 8,
+      "target": 11,
+      "value": 4119701.0
+    }
+  ]
+}
