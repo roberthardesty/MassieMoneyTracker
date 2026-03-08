@@ -17,38 +17,6 @@
       "category": "donor_anti_massie"
     },
     {
-      "name": "Thomas Massie Campaign",
-      "category": "pro_massie"
-    },
-    {
-      "name": "Protect Freedom Political Action Committee",
-      "category": "pro_massie"
-    },
-    {
-      "name": "Kentucky First PAC",
-      "category": "pro_massie"
-    },
-    {
-      "name": "Gallrein Campaign",
-      "category": "anti_massie"
-    },
-    {
-      "name": "Maga KY",
-      "category": "anti_massie"
-    },
-    {
-      "name": "Preserve America PAC",
-      "category": "anti_massie"
-    },
-    {
-      "name": "Make Liberty Win",
-      "category": "pro_massie"
-    },
-    {
-      "name": "RJC Victory Fund",
-      "category": "anti_massie"
-    },
-    {
       "name": "Support Massie",
       "category": "target_support"
     },
@@ -61,61 +29,5 @@
       "category": "target_support_gallrein"
     }
   ],
-  "links": [
-    {
-      "source": 0,
-      "target": 5,
-      "value": 7500000
-    },
-    {
-      "source": 1,
-      "target": 8,
-      "value": 1000000
-    },
-    {
-      "source": 2,
-      "target": 8,
-      "value": 250000
-    },
-    {
-      "source": 3,
-      "target": 8,
-      "value": 750000
-    },
-    {
-      "source": 5,
-      "target": 6,
-      "value": 1000000
-    },
-    {
-      "source": 11,
-      "target": 14,
-      "value": 2869777.0
-    },
-    {
-      "source": 11,
-      "target": 13,
-      "value": 2869777.0
-    },
-    {
-      "source": 10,
-      "target": 12,
-      "value": 180730.0
-    },
-    {
-      "source": 8,
-      "target": 14,
-      "value": 468911.0
-    },
-    {
-      "source": 8,
-      "target": 13,
-      "value": 4119701.0
-    },
-    {
-      "source": 6,
-      "target": 12,
-      "value": 2013972.0
-    }
-  ]
+  "links": []
 }

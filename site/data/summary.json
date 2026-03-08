@@ -1,30 +1,5 @@
 {
-  "anti_massie": {
-    "total_receipts": 4515919.26,
-    "total_disbursements": 3845244.99,
-    "total_independent_expenditures": 1762667.55,
-    "cash_on_hand": 2468226.3000000003,
-    "num_committees": 4
-  },
-  "pro_massie": {
-    "total_receipts": 15188471.66,
-    "total_disbursements": 5730637.029999999,
-    "total_independent_expenditures": 1006986.0,
-    "cash_on_hand": 10843468.56,
-    "num_committees": 4
-  },
-  "ie_detail": {
-    "anti_massie": {
-      "ie_oppose": 6989478.0,
-      "ie_support": 3275960.55
-    },
-    "pro_massie": {
-      "ie_support": 2356685.1
-    },
-    "watchlist": {
-      "ie_oppose": -1860.77
-    }
-  },
+  "ie_detail": {},
   "primary_date": "2026-05-19",
-  "days_until_primary": 72
+  "days_until_primary": 71
 }
