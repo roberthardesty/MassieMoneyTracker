@@ -1,7 +1,7 @@
 {
-  "exported_at": "2026-03-16T06:29:38.322175",
+  "exported_at": "2026-03-17T06:20:56.199379",
   "primary_date": "2026-05-19",
-  "days_until_primary": 63,
+  "days_until_primary": 62,
   "data_source": "Federal Election Commission (FEC) via OpenFEC API",
   "project": "MassieMoney \u2014 KY-04 Campaign Finance Transparency",
   "fec_url": "https://www.fec.gov/data/elections/house/KY/04/2026/"
